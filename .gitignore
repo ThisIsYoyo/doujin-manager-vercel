@@ -1,0 +1,3 @@
+﻿.python-version
+*.pyc
+doujin_manager/db.sqlite3
