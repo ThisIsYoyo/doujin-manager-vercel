@@ -1,3 +1,4 @@
 ﻿.python-version
 *.pyc
 doujin_manager/db.sqlite3
+doujin_manager/playground
