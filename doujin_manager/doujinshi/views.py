@@ -1,10 +1,12 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import QuerySet
-from rest_framework.views import APIView, status
+from rest_framework import serializers
+from rest_framework.generics import ListAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import serializers
+from rest_framework.views import APIView, status
 
 from doujinshi.models import Author, Circle, Doujinshi
 from doujinshi.serializers import AuthorSerializer, CircleSerializer, DoujinshiSerializer
@@ -44,6 +46,19 @@ class CreateAPIView(APIView):
         return Response(sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ListPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = "page_size"
+    max_page_size = 50
+
+
+class FilterListAPIView(ListAPIView):
+    paginator_class = ListPagination
+    queryset = QuerySet()
+    serializer_class = serializers.ModelSerializer
+
+
+# -------------- Circle --------------
 class CircleGETView(IDFilterAPIView):
     queryset = Circle.objects.all()
     sz_class = CircleSerializer
@@ -53,6 +68,12 @@ class CircleCreateView(CreateAPIView):
     sz_class = CircleSerializer
 
 
+class CircleListView(FilterListAPIView):
+    queryset = Circle.objects.all()
+    serializer_class = CircleSerializer
+
+
+# -------------- Author --------------
 class AuthorGETView(IDFilterAPIView):
     queryset = Author.objects.all()
     sz_class = AuthorSerializer
@@ -62,6 +83,12 @@ class AuthorCreateView(CreateAPIView):
     sz_class = AuthorSerializer
 
 
+class AuthorListView(FilterListAPIView):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+
+# -------------- Doujinshi --------------
 class DoujinshiGETView(IDFilterAPIView):
     queryset = Doujinshi.objects.all()
     sz_class = DoujinshiSerializer
@@ -69,3 +96,8 @@ class DoujinshiGETView(IDFilterAPIView):
 
 class DoujinshiCreateView(CreateAPIView):
     sz_class = DoujinshiSerializer
+
+
+class DoujinshiListView(FilterListAPIView):
+    queryset = Doujinshi.objects.all()
+    serializer_class = DoujinshiSerializer
