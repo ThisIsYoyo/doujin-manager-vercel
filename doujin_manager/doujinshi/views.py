@@ -28,8 +28,8 @@ class IDFilterAPIView(APIView):
                 f"{self.queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND
             )
 
-        model_queryset = self.queryset.get(id=id)
-        sz = self.sz_class(model_queryset)
+        model_id = self.queryset.get(id=id)
+        sz = self.sz_class(model_id)
         return Response(sz.data, status=status.HTTP_200_OK)
 
 
