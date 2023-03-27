@@ -16,4 +16,6 @@ urlpatterns = [
     re_path(r"^circle/", view=views.CircleCreateView.as_view(), name="circle create"),
     re_path(r"^author/", view=views.AuthorCreateView.as_view(), name="author create"),
     re_path(r"^doujinshi/", view=views.DoujinshiCreateView.as_view(), name="doujinshi create"),
+    # choices
+    re_path(r"choices/", view=views.choice_view, name="all choices"),
 ]

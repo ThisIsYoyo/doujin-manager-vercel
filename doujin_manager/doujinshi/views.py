@@ -3,12 +3,14 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import QuerySet
 from rest_framework import serializers
+from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView, status
 
+from doujinshi.choices import CURRENCY_CHOICES, DOUJIN_LANGUAGE_CHOICES
 from doujinshi.models import Author, Circle, Doujinshi
 from doujinshi.serializers import AuthorSerializer, CircleSerializer, DoujinshiSerializer
 
@@ -126,3 +128,19 @@ class DoujinshiCreateView(CreateAPIView):
 class DoujinshiListView(FilterListAPIView):
     queryset = Doujinshi.objects.all()
     serializer_class = DoujinshiSerializer
+
+
+# -------------- Choices --------------
+def choices_to_list(choices: tuple) -> list[dict]:
+    return [{"name": name, "value": value} for value, name in choices]
+
+
+@api_view(["GET"])
+def choice_view(request: Request):
+    return Response(
+        {
+            "DOUJIN_LANGUAGE_CHOICES": choices_to_list(DOUJIN_LANGUAGE_CHOICES),
+            "CURRENCY_CHOICES": choices_to_list(CURRENCY_CHOICES),
+        },
+        status=status.HTTP_200_OK,
+    )
