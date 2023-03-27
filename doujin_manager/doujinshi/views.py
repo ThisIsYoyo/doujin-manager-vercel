@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.db.models import QuerySet
@@ -31,6 +32,30 @@ class IDFilterAPIView(APIView):
         model_id = self.queryset.get(id=id)
         sz = self.sz_class(model_id)
         return Response(sz.data, status=status.HTTP_200_OK)
+
+    def post(self, request: Request, **kwargs):
+        id = kwargs.get("id", 0)
+
+        if not self.queryset.filter(id=id).exists():
+            return Response(
+                f"{self.queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND
+            )
+
+        model_id = self.queryset.get(id=id)
+        model_field_name_list = [f.name for f in model_id.__class__._meta.fields]
+        modified_data = request.data.get("data", {})
+        with transaction.atomic():
+            for modified_f, v in modified_data.items():
+                if modified_f not in model_field_name_list:
+                    return Response(
+                        f"{model_id.__class__.__name__} not contain `{modified_f}` field",
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+
+                setattr(model_id, modified_f, v)
+            model_id.save()
+
+        return Response(self.sz_class(model_id).data, status=status.HTTP_200_OK)
 
 
 class CreateAPIView(APIView):
