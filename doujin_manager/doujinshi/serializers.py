@@ -6,13 +6,13 @@ from doujinshi.models import Author, Circle, Doujinshi
 class CircleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Circle
-        fields = ["name"]
+        fields = ["id", "name"]
 
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        fields = ["name"]
+        fields = ["id", "name"]
 
 
 class DoujinshiSerializer(serializers.ModelSerializer):
@@ -22,6 +22,7 @@ class DoujinshiSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doujinshi
         fields = [
+            "id",
             "name",
             "author",
             "circle",
