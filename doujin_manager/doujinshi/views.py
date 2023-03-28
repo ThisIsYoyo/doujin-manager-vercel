@@ -45,7 +45,7 @@ class IDFilterAPIView(APIView):
 
         model_id = self.queryset.get(id=id)
         model_field_name_list = [f.name for f in model_id.__class__._meta.fields]
-        modified_data = request.data.get("data", {})
+        modified_data = request.data
         with transaction.atomic():
             for modified_f, v in modified_data.items():
                 if modified_f not in model_field_name_list:
