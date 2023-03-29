@@ -15,18 +15,18 @@ class Doujinshi(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     circle = models.ForeignKey(Circle, on_delete=models.CASCADE)
     origin_language = models.CharField(
-        max_length=DOUJIN_LANGUAGE_MAX_LEN, default=DOUJIN_LANGUAGE_DEFAULT, choices=DOUJIN_LANGUAGE_CHOICES
+        null=True, max_length=DOUJIN_LANGUAGE_MAX_LEN, default=DOUJIN_LANGUAGE_DEFAULT, choices=DOUJIN_LANGUAGE_CHOICES
     )
     present_language = models.CharField(
-        max_length=DOUJIN_LANGUAGE_MAX_LEN, default=DOUJIN_LANGUAGE_DEFAULT, choices=DOUJIN_LANGUAGE_CHOICES
+        null=True, max_length=DOUJIN_LANGUAGE_MAX_LEN, default=DOUJIN_LANGUAGE_DEFAULT, choices=DOUJIN_LANGUAGE_CHOICES
     )
 
     # accounting related
-    buy_way = models.CharField(max_length=64)
+    buy_way = models.CharField(null=True, max_length=64)
     buy_time = models.DateField(null=True)
     price = models.PositiveIntegerField(null=True)
     price_currency = models.CharField(
-        max_length=CURRENCY_MAX_LEN, null=True, default=CURRENCY_DEFAULT, choices=CURRENCY_CHOICES
+        null=True, max_length=CURRENCY_MAX_LEN, default=CURRENCY_DEFAULT, choices=CURRENCY_CHOICES
     )
 
     # system auto
