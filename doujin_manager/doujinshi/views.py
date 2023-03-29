@@ -64,7 +64,7 @@ class CreateAPIView(APIView):
     sz_class = serializers.ModelSerializer
 
     def post(self, request: Request):
-        save_data = request.data.get("data", {})
+        save_data = request.data
 
         sz = self.sz_class(data=save_data)
         if sz.is_valid():
