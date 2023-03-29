@@ -16,14 +16,19 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class DoujinshiSerializer(serializers.ModelSerializer):
-    author = serializers.CharField(source="author.name")
-    circle = serializers.CharField(source="circle.name")
+    circle_id = serializers.PrimaryKeyRelatedField(source="circle", queryset=Circle.objects.all())
+    author_id = serializers.PrimaryKeyRelatedField(source="author", queryset=Author.objects.all())
+
+    circle = CircleSerializer(read_only=True)
+    author = AuthorSerializer(read_only=True)
 
     class Meta:
         model = Doujinshi
         fields = [
             "id",
             "name",
+            "author_id",
+            "circle_id",
             "author",
             "circle",
             "origin_language",
