@@ -31,3 +31,16 @@ class Doujinshi(models.Model):
 
     # system auto
     record_time = models.DateTimeField(auto_now=True)
+
+
+# util for model
+FOREIGN_PK_FIELD_SUFFIX = "_id"
+
+
+def get_foreign_pk_field_list(model: models.Model) -> list:
+    foreign_list = []
+    for f in model._meta.fields:
+        if f.__class__ == models.ForeignKey:
+            foreign_list.append(f.name + FOREIGN_PK_FIELD_SUFFIX)
+
+    return foreign_list
