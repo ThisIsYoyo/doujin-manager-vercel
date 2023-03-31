@@ -80,7 +80,7 @@ class IDFilterAPIView(APIView):
                     status=status.HTTP_403_FORBIDDEN,
                 )
 
-                setattr(model_id, modified_f, v)
+            setattr(model_id, modified_f, v)
         model_id.save()
         return model_id
 
