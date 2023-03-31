@@ -4,22 +4,19 @@
 ### 使用 python3.10.10 開發
 
 ### 前置
-在 project 的根目錄
-```bash
-pip -r install requirement
-```
 安裝需求的 packages
-
-進入 `doujin-manager/doujin_manager`
 ```bash
-python manage.py migrate
+{user}:{path-to-doujin-manager}/doujin-manager/doujin_manager$ pip -r install requirement.txt
 ```
+
 做個 django 需要的 db
+```bash
+{user}:{path-to-doujin-manager}/doujin-manager/doujin_manager$ python manage.py migrate
+```
 
 ### 啟動
-進入 `doujin-manager/doujin_manager`
 ```bash
-python manage.py runserver
+{user}:{path-to-doujin-manager}/doujin-manager/doujin_manager$ python manage.py runserver
 ```
 
 ref:
