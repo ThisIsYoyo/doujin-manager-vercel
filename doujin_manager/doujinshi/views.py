@@ -43,46 +43,13 @@ class IDFilterAPIView(APIView):
                 f"{self.queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND
             )
 
-        save_response = self._save(request=request, id=id)
-        if isinstance(save_response, Response):
-            return save_response
+        model_instance = self.queryset.get(id=id)
+        update_sz = self.sz_class(model_instance, data=request.data, partial=True)
+        if update_sz.is_valid():
+            update_sz.save()
+            return Response(update_sz.data, status=status.HTTP_200_OK)
 
-        if isinstance(save_response, models.Model):
-            return Response(self.sz_class(save_response).data, status=status.HTTP_200_OK)
-
-    @transaction.atomic
-    def _save(self, request: Request, id: int) -> Union[models.Model, Response]:
-        model_id = self.queryset.get(id=id)
-        model_cls = model_id.__class__
-        model_field_name_list = [f.name for f in model_cls._meta.fields]
-        model_foreign_field_pk_field_list = get_foreign_pk_field_list(model_cls)
-        modified_data = request.data
-
-        for modified_f, v in modified_data.items():
-            if modified_f in model_foreign_field_pk_field_list:
-                modified_foreign_f = modified_f.replace(FOREIGN_PK_FIELD_SUFFIX, "")
-                print("modified_foreign_f", modified_foreign_f)
-                foreign_model = getattr(model_id, modified_foreign_f).__class__
-                print("foreign_model", foreign_model)
-                if not foreign_model.objects.filter(id=v).exists():
-                    return Response(
-                        f"There no {modified_f} which id == `{v}` ",
-                        status=status.HTTP_403_FORBIDDEN,
-                    )
-
-                foreign_model_instance = foreign_model.objects.get(id=v)
-                setattr(model_id, modified_foreign_f, foreign_model_instance)
-                continue
-
-            if modified_f not in model_field_name_list:
-                return Response(
-                    f"{model_cls.__name__} not contain `{modified_f}` field",
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            setattr(model_id, modified_f, v)
-        model_id.save()
-        return model_id
+        return Response(update_sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateAPIView(APIView):
