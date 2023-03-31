@@ -35,7 +35,7 @@ class IDFilterAPIView(APIView):
         sz = self.sz_class(model_id)
         return Response(sz.data, status=status.HTTP_200_OK)
 
-    def post(self, request: Request, **kwargs):
+    def patch(self, request: Request, **kwargs):
         id = kwargs.get("id", 0)
 
         if not self.queryset.filter(id=id).exists():
