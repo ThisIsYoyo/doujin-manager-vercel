@@ -13,9 +13,9 @@ urlpatterns = [
     re_path(r"^author/(?P<id>\d+)/", view=views.AuthorGETView.as_view(), name="author get by id"),
     re_path(r"^doujinshi/(?P<id>\d+)/", view=views.DoujinshiGETView.as_view(), name="doujinshi get by id"),
     # create data
-    re_path(r"^circle/", view=views.CircleCreateView.as_view(), name="circle create"),
-    re_path(r"^author/", view=views.AuthorCreateView.as_view(), name="author create"),
-    re_path(r"^doujinshi/", view=views.DoujinshiCreateView.as_view(), name="doujinshi create"),
+    re_path(r"^circle/", view=views.CircleCreateDestoryView.as_view(), name="circle create/delete"),
+    re_path(r"^author/", view=views.AuthorCreateDestoryView.as_view(), name="author create/delete"),
+    re_path(r"^doujinshi/", view=views.DoujinshiCreateDestoryView.as_view(), name="doujinshi create/delete"),
     # choices
     re_path(r"choices/", view=views.choice_view, name="all choices"),
 ]

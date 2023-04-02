@@ -52,8 +52,9 @@ class IDFilterAPIView(APIView):
         return Response(update_sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CreateAPIView(APIView):
+class CreateDestoryAPIView(APIView):
     sz_class = serializers.ModelSerializer
+    queryset = None
 
     def post(self, request: Request):
         save_data = request.data
@@ -63,6 +64,21 @@ class CreateAPIView(APIView):
             sz.save()
             return Response({"save data": sz.data, "save status": "success"}, status=status.HTTP_201_CREATED)
         return Response(sz.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request: Request):
+        id_list = request.query_params.getlist("ids", [])
+        id_list = [int(id) for id in id_list]
+
+        need_del_queryset = self.queryset.filter(id__in=id_list)
+        deleted_id_list = list(need_del_queryset.values_list("id", flat=True))
+
+        del_count, _ = need_del_queryset.delete()
+        assert del_count == len(deleted_id_list)
+
+        if del_count:
+            return Response({"message": "success", "deleted_id_list": deleted_id_list}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "nothing to delete"}, status=status.HTTP_202_ACCEPTED)
 
 
 class ListPagination(PageNumberPagination):
@@ -83,7 +99,8 @@ class CircleGETView(IDFilterAPIView):
     sz_class = CircleSerializer
 
 
-class CircleCreateView(CreateAPIView):
+class CircleCreateDestoryView(CreateDestoryAPIView):
+    queryset = Circle.objects.all()
     sz_class = CircleSerializer
 
 
@@ -98,7 +115,8 @@ class AuthorGETView(IDFilterAPIView):
     sz_class = AuthorSerializer
 
 
-class AuthorCreateView(CreateAPIView):
+class AuthorCreateDestoryView(CreateDestoryAPIView):
+    queryset = Author.objects.all()
     sz_class = AuthorSerializer
 
 
@@ -113,7 +131,8 @@ class DoujinshiGETView(IDFilterAPIView):
     sz_class = DoujinshiSerializer
 
 
-class DoujinshiCreateView(CreateAPIView):
+class DoujinshiCreateDestoryView(CreateDestoryAPIView):
+    queryset = Doujinshi.objects.all()
     sz_class = DoujinshiSerializer
 
 
