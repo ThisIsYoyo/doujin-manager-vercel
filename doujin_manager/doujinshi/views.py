@@ -1,4 +1,5 @@
 from typing import Union
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction, models
 from django.http import HttpResponse
 from django.db.models import QuerySet
@@ -20,16 +21,15 @@ def index(request):
 
 
 class IDFilterAPIView(APIView):
-    queryset = QuerySet()
+    queryset = None
     sz_class = serializers.ModelSerializer
 
     def get(self, request: Request, **kwargs):
         id = kwargs.get("id", 0)
+        queryset = self.get_queryset()
 
-        if not self.queryset.filter(id=id).exists():
-            return Response(
-                f"{self.queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND
-            )
+        if not queryset.filter(id=id).exists():
+            return Response(f"{queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND)
 
         model_id = self.queryset.get(id=id)
         sz = self.sz_class(model_id)
@@ -37,19 +37,28 @@ class IDFilterAPIView(APIView):
 
     def patch(self, request: Request, **kwargs):
         id = kwargs.get("id", 0)
+        queryset = self.get_queryset()
 
-        if not self.queryset.filter(id=id).exists():
-            return Response(
-                f"{self.queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND
-            )
+        if not queryset.filter(id=id).exists():
+            return Response(f"{queryset.model.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND)
 
-        model_instance = self.queryset.get(id=id)
+        model_instance = queryset.get(id=id)
         update_sz = self.sz_class(model_instance, data=request.data, partial=True)
         if update_sz.is_valid():
             update_sz.save()
             return Response(update_sz.data, status=status.HTTP_200_OK)
 
         return Response(update_sz.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_queryset(self) -> QuerySet:
+        queryset = None
+        if self.queryset is not None:
+            queryset = (isinstance(self.queryset, models.Manager) and self.queryset.all()) or self.queryset
+        else:
+            cls_name = self.__class__.__name__
+            raise ImproperlyConfigured(f"{cls_name} not set queryset attribute properly")
+
+        return queryset
 
 
 class CreateDestoryAPIView(APIView):
@@ -69,7 +78,8 @@ class CreateDestoryAPIView(APIView):
         id_list = request.query_params.getlist("ids", [])
         id_list = [int(id) for id in id_list]
 
-        need_del_queryset = self.queryset.filter(id__in=id_list)
+        queryset = self.get_queryset()
+        need_del_queryset = queryset.filter(id__in=id_list)
         deleted_id_list = list(need_del_queryset.values_list("id", flat=True))
 
         del_count, _ = need_del_queryset.delete()
@@ -79,6 +89,16 @@ class CreateDestoryAPIView(APIView):
             return Response({"message": "success", "deleted_id_list": deleted_id_list}, status=status.HTTP_200_OK)
         else:
             return Response({"message": "nothing to delete"}, status=status.HTTP_202_ACCEPTED)
+
+    def get_queryset(self) -> QuerySet:
+        queryset = None
+        if self.queryset is not None:
+            queryset = (isinstance(self.queryset, models.Manager) and self.queryset.all()) or self.queryset
+        else:
+            cls_name = self.__class__.__name__
+            raise ImproperlyConfigured(f"{cls_name} not set queryset attribute properly")
+
+        return queryset
 
 
 class ListPagination(PageNumberPagination):
