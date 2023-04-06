@@ -113,10 +113,6 @@ class FilterListAPIView(ListAPIView):
 
 
 # -------------- Circle --------------
-def get_circle_queryset() -> QuerySet:
-    return Circle.objects.all()
-
-
 @api_view(["GET", "PATCH"])
 def circle_id_view(request: Request, **kwargs):
     id = kwargs.get("id", 0)
@@ -171,14 +167,52 @@ class CircleListView(FilterListAPIView):
 
 
 # -------------- Author --------------
-class AuthorGETView(IDFilterAPIView):
-    queryset = Author.objects.all()
-    sz_class = AuthorSerializer
+@api_view(["GET", "PATCH"])
+def author_id_view(request: Request, **kwargs):
+    id = kwargs.get("id", 0)
+
+    author_instance = Author.get_by_id(id)
+    if author_instance is None:
+        return Response(f"{Author.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        sz_instance = AuthorSerializer(author_instance)
+        return Response(sz_instance.data, status=status.HTTP_200_OK)
+
+    if request.method == "PATCH":
+        update_sz = AuthorSerializer(author_instance, data=request.data, partial=True)
+        if update_sz.is_valid():
+            update_sz.save()
+            return Response(update_sz.data, status=status.HTTP_200_OK)
+
+        return Response(update_sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AuthorCreateDestoryView(CreateDestoryAPIView):
-    queryset = Author.objects.all()
-    sz_class = AuthorSerializer
+@api_view(["POST", "DELETE"])
+def author_create_destory_view(request: Request):
+    if request.method == "POST":
+        sz = AuthorSerializer(data=request.data)
+
+        if sz.is_valid():
+            with transaction.atomic():
+                sz.save()
+            return Response({"save data": sz.data, "save status": "success"}, status=status.HTTP_201_CREATED)
+        
+        return Response(sz.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    if request.method == "DELETE":
+        id_list = request.query_params.getlist("ids", [])
+        id_list = [int(id) for id in id_list]
+
+        with transaction.atomic():
+            need_del_queryset = Author.filter_by_id_list(id_list)
+            deleted_id_list = list(need_del_queryset.values_list("id", flat=True))
+            del_count, _ = need_del_queryset.delete()
+
+        if del_count:
+            return Response({"message": "success", "deleted_id_list": deleted_id_list}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "nothing to delete"}, status=status.HTTP_202_ACCEPTED)
 
 
 class AuthorListView(FilterListAPIView):
@@ -187,14 +221,52 @@ class AuthorListView(FilterListAPIView):
 
 
 # -------------- Doujinshi --------------
-class DoujinshiGETView(IDFilterAPIView):
-    queryset = Doujinshi.objects.all()
-    sz_class = DoujinshiSerializer
+@api_view(["GET", "PATCH"])
+def doujinshi_id_view(request: Request, **kwargs):
+    id = kwargs.get("id", 0)
+
+    doujinshi_instance = Doujinshi.get_by_id(id)
+    if doujinshi_instance is None:
+        return Response(f"{Doujinshi.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        sz_instance = DoujinshiSerializer(doujinshi_instance)
+        return Response(sz_instance.data, status=status.HTTP_200_OK)
+
+    if request.method == "PATCH":
+        update_sz = DoujinshiSerializer(doujinshi_instance, data=request.data, partial=True)
+        if update_sz.is_valid():
+            update_sz.save()
+            return Response(update_sz.data, status=status.HTTP_200_OK)
+
+        return Response(update_sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DoujinshiCreateDestoryView(CreateDestoryAPIView):
-    queryset = Doujinshi.objects.all()
-    sz_class = DoujinshiSerializer
+@api_view(["POST", "DELETE"])
+def doujinshi_create_destory_view(request: Request):
+    if request.method == "POST":
+        sz = DoujinshiSerializer(data=request.data)
+
+        if sz.is_valid():
+            with transaction.atomic():
+                sz.save()
+            return Response({"save data": sz.data, "save status": "success"}, status=status.HTTP_201_CREATED)
+        
+        return Response(sz.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    if request.method == "DELETE":
+        id_list = request.query_params.getlist("ids", [])
+        id_list = [int(id) for id in id_list]
+
+        with transaction.atomic():
+            need_del_queryset = Doujinshi.filter_by_id_list(id_list)
+            deleted_id_list = list(need_del_queryset.values_list("id", flat=True))
+            del_count, _ = need_del_queryset.delete()
+
+        if del_count:
+            return Response({"message": "success", "deleted_id_list": deleted_id_list}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "nothing to delete"}, status=status.HTTP_202_ACCEPTED)
 
 
 class DoujinshiListView(FilterListAPIView):
