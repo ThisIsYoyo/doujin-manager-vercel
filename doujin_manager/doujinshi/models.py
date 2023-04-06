@@ -1,16 +1,29 @@
+from typing import Union
 from django.db import models
 from .choices import *
 
 
-class Circle(models.Model):
+class IdMixin:
+    @classmethod
+    def get_by_id(cls, id: int) -> Union[models.QuerySet, None]:
+        if cls.objects.filter(id=id).exists():
+            return cls.objects.get(id=id)
+        return None
+    
+    @classmethod
+    def filter_by_id_list(cls, id_list: list[int]) -> models.QuerySet:
+        return cls.objects.filter(id__in=id_list)
+
+
+class Circle(models.Model, IdMixin):
     name = models.CharField(max_length=128)
 
 
-class Author(models.Model):
+class Author(models.Model, IdMixin):
     name = models.CharField(max_length=128)
 
 
-class Doujinshi(models.Model):
+class Doujinshi(models.Model, IdMixin):
     name = models.CharField(max_length=256)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     circle = models.ForeignKey(Circle, on_delete=models.CASCADE)

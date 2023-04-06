@@ -1,4 +1,3 @@
-from typing import Union
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction, models
 from django.http import HttpResponse
@@ -12,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView, status
 
 from doujinshi.choices import CURRENCY_CHOICES, DOUJIN_LANGUAGE_CHOICES
-from doujinshi.models import FOREIGN_PK_FIELD_SUFFIX, Author, Circle, Doujinshi, get_foreign_pk_field_list
+from doujinshi.models import Author, Circle, Doujinshi
 from doujinshi.serializers import AuthorSerializer, CircleSerializer, DoujinshiSerializer
 
 
@@ -114,14 +113,56 @@ class FilterListAPIView(ListAPIView):
 
 
 # -------------- Circle --------------
-class CircleGETView(IDFilterAPIView):
-    queryset = Circle.objects.all()
-    sz_class = CircleSerializer
+def get_circle_queryset() -> QuerySet:
+    return Circle.objects.all()
 
 
-class CircleCreateDestoryView(CreateDestoryAPIView):
-    queryset = Circle.objects.all()
-    sz_class = CircleSerializer
+@api_view(["GET", "PATCH"])
+def circle_id_view(request: Request, **kwargs):
+    id = kwargs.get("id", 0)
+
+    circle_instance = Circle.get_by_id(id)
+    if circle_instance is None:
+        return Response(f"{Circle.__name__} with id:`{id}` not exist", status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == "GET":
+        sz_instance = CircleSerializer(circle_instance)
+        return Response(sz_instance.data, status=status.HTTP_200_OK)
+
+    if request.method == "PATCH":
+        update_sz = CircleSerializer(circle_instance, data=request.data, partial=True)
+        if update_sz.is_valid():
+            update_sz.save()
+            return Response(update_sz.data, status=status.HTTP_200_OK)
+
+        return Response(update_sz.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST", "DELETE"])
+def circle_create_destory_view(request: Request):
+    if request.method == "POST":
+        sz = CircleSerializer(data=request.data)
+
+        if sz.is_valid():
+            with transaction.atomic():
+                sz.save()
+            return Response({"save data": sz.data, "save status": "success"}, status=status.HTTP_201_CREATED)
+        
+        return Response(sz.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    if request.method == "DELETE":
+        id_list = request.query_params.getlist("ids", [])
+        id_list = [int(id) for id in id_list]
+
+        with transaction.atomic():
+            need_del_queryset = Circle.filter_by_id_list(id_list)
+            deleted_id_list = list(need_del_queryset.values_list("id", flat=True))
+            del_count, _ = need_del_queryset.delete()
+
+        if del_count:
+            return Response({"message": "success", "deleted_id_list": deleted_id_list}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "nothing to delete"}, status=status.HTTP_202_ACCEPTED)
 
 
 class CircleListView(FilterListAPIView):
